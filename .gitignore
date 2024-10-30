@@ -2,4 +2,4 @@
 temp
 .env
 conversation_history.txt
-
+myVm_key.pem
