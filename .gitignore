@@ -3,3 +3,4 @@ temp
 .env
 conversation_history.txt
 myVm_key.pem
+connexion_to_azure_vm.txt
