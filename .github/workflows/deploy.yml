@@ -34,7 +34,7 @@ jobs:
           else
             echo "AZURE_VM_SSH_KEY is present and has been loaded."
           fi
-
+          
       - name: Set up SSH
         env:
           AZURE_VM_SSH_KEY: ${{ secrets.AZURE_VM_SSH_KEY }}
