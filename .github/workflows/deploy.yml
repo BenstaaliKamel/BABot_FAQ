@@ -3,48 +3,66 @@ name: Deploy Streamlit App to Azure VM
 on:
   push:
     branches:
-      - main  # Replace 'main' with the branch you want to use for deployment
+      - main  # Replace with your deployment branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Check out the code from the GitHub repository
       - name: Check out the code
         uses: actions/checkout@v3
 
-      # Step 2: Set up SSH access to the Azure VM
+      # Step to verify secrets are passed correctly
+      - name: Verify Secrets
+        run: |
+          if [ -z "${{ secrets.AZURE_VM_USERNAME }}" ]; then
+            echo "Error: AZURE_VM_USERNAME is not set in GitHub Secrets"
+            exit 1
+          else
+            echo "AZURE_VM_USERNAME is set to: ${{ secrets.AZURE_VM_USERNAME }}"
+          fi
+          if [ -z "${{ secrets.AZURE_VM_IP }}" ]; then
+            echo "Error: AZURE_VM_IP is not set in GitHub Secrets"
+            exit 1
+          else
+            echo "AZURE_VM_IP is set to: ${{ secrets.AZURE_VM_IP }}"
+          fi
+          if [ -z "${{ secrets.AZURE_VM_SSH_KEY }}" ]; then
+            echo "Error: AZURE_VM_SSH_KEY is not set in GitHub Secrets"
+            exit 1
+          else
+            echo "AZURE_VM_SSH_KEY is present and has been loaded."
+          fi
+          
       - name: Set up SSH
         env:
           AZURE_VM_SSH_KEY: ${{ secrets.AZURE_VM_SSH_KEY }}
           AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
         run: |
-          echo "Azure VM IP: $AZURE_VM_IP"  # Debugging step to verify IP address
-          
-          # Create the .ssh directory with appropriate permissions
+          echo "Setting up SSH with Azure VM IP: $AZURE_VM_IP"
+
+          # Create the .ssh directory with the right permissions
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           
-          # Save the SSH private key and set permissions
+          # Save SSH private key and configure permissions
           echo "$AZURE_VM_SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           
           # Add the VM's IP to known_hosts to prevent SSH prompt
           ssh-keyscan -H "$AZURE_VM_IP" >> ~/.ssh/known_hosts || true
 
-      # Step 3: Deploy the application files to the Azure VM
       - name: Deploy to Azure VM
         env:
           AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
           AZURE_VM_USERNAME: ${{ secrets.AZURE_VM_USERNAME }}
         run: |
-          echo "Deploying to $AZURE_VM_USERNAME@$AZURE_VM_IP"  # Debugging step to verify username and IP
-          
-          # Copy application files to the target directory on the VM
+          echo "Deploying to $AZURE_VM_USERNAME@$AZURE_VM_IP"  # Debugging step
+
+          # Use scp to transfer application files to the VM
           scp -o StrictHostKeyChecking=no -r * $AZURE_VM_USERNAME@$AZURE_VM_IP:/home/$AZURE_VM_USERNAME/streamlit_app/
 
-      # Step 4: Run Streamlit App on Azure VM
       - name: Run Streamlit App
         env:
           AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
