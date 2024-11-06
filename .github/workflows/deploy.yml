@@ -17,18 +17,23 @@ jobs:
       # Step 2: Set up SSH access to the Azure VM
       - name: Set up SSH
         env:
-          AZURE_VM_SSH_KEY: ${{ secrets.AZURE_VM_SSH_KEY }}
+         AZURE_VM_SSH_KEY: ${{ secrets.AZURE_VM_SSH_KEY }}
+         AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
         run: |
-          # Create the .ssh directory with appropriate permissions
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          
-          # Save the SSH private key from GitHub Secrets and set permissions
-          echo "$AZURE_VM_SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          
-          # Add the Azure VM's IP to known_hosts to prevent SSH prompts
-          ssh-keyscan -H ${{ secrets.AZURE_VM_IP }} >> ~/.ssh/known_hosts
+         # Debug step to check the IP address
+         echo "Azure VM IP: $AZURE_VM_IP"
+    
+         # Create the .ssh directory with appropriate permissions
+         mkdir -p ~/.ssh
+         chmod 700 ~/.ssh
+
+         # Save the SSH private key from GitHub Secrets and set permissions
+         echo "$AZURE_VM_SSH_KEY" > ~/.ssh/id_rsa
+         chmod 600 ~/.ssh/id_rsa
+
+         # Ensure the IP address is added to known_hosts to avoid SSH prompt
+         ssh-keyscan -H "$AZURE_VM_IP" >> ~/.ssh/known_hosts || true
+
 
       # Step 3: Deploy the application files to the Azure VM
       - name: Deploy to Azure VM
