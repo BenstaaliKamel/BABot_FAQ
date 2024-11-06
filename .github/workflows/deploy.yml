@@ -17,23 +17,21 @@ jobs:
       # Step 2: Set up SSH access to the Azure VM
       - name: Set up SSH
         env:
-         AZURE_VM_SSH_KEY: ${{ secrets.AZURE_VM_SSH_KEY }}
-         AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
+          AZURE_VM_SSH_KEY: ${{ secrets.AZURE_VM_SSH_KEY }}
+          AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
         run: |
-         # Debug step to check the IP address
-         echo "Azure VM IP: $AZURE_VM_IP"
-    
-         # Create the .ssh directory with appropriate permissions
-         mkdir -p ~/.ssh
-         chmod 700 ~/.ssh
-
-         # Save the SSH private key from GitHub Secrets and set permissions
-         echo "$AZURE_VM_SSH_KEY" > ~/.ssh/id_rsa
-         chmod 600 ~/.ssh/id_rsa
-
-         # Ensure the IP address is added to known_hosts to avoid SSH prompt
-         ssh-keyscan -H "$AZURE_VM_IP" >> ~/.ssh/known_hosts || true
-
+          echo "Azure VM IP: $AZURE_VM_IP"  # Debugging step to verify IP address
+          
+          # Create the .ssh directory with appropriate permissions
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          
+          # Save the SSH private key and set permissions
+          echo "$AZURE_VM_SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          
+          # Add the VM's IP to known_hosts to prevent SSH prompt
+          ssh-keyscan -H "$AZURE_VM_IP" >> ~/.ssh/known_hosts || true
 
       # Step 3: Deploy the application files to the Azure VM
       - name: Deploy to Azure VM
@@ -41,25 +39,19 @@ jobs:
           AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
           AZURE_VM_USERNAME: ${{ secrets.AZURE_VM_USERNAME }}
         run: |
-          # Copy application files to the VM's target directory (adjust path if necessary)
-          scp -r * $AZURE_VM_USERNAME@$AZURE_VM_IP:/home/$AZURE_VM_USERNAME/streamlit_app/
+          echo "Deploying to $AZURE_VM_USERNAME@$AZURE_VM_IP"  # Debugging step to verify username and IP
+          
+          # Copy application files to the target directory on the VM
+          scp -o StrictHostKeyChecking=no -r * $AZURE_VM_USERNAME@$AZURE_VM_IP:/home/$AZURE_VM_USERNAME/streamlit_app/
 
-      # Step 4: Run or Restart the Streamlit app on the Azure VM
+      # Step 4: Run Streamlit App on Azure VM
       - name: Run Streamlit App
         env:
           AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
           AZURE_VM_USERNAME: ${{ secrets.AZURE_VM_USERNAME }}
         run: |
           ssh $AZURE_VM_USERNAME@$AZURE_VM_IP << EOF
-            # Navigate to the application directory
             cd /home/$AZURE_VM_USERNAME/streamlit_app
-
-            # (Optional) Set up a virtual environment and install dependencies
-            # python3 -m venv venv
-            # source venv/bin/activate
-            # pip install -r requirements.txt
-
-            # Stop any running Streamlit instances and restart the application
             pkill -f streamlit || true
             nohup streamlit run app.py --server.port=8501 &
           EOF
