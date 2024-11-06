@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Check out the code from the GitHub repository
+      # Use actions/checkout@v3 instead of v2 to avoid deprecation warnings
       - name: Check out the code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # Install SSH key and set up known_hosts for GitHub Actions
       - name: Set up SSH
@@ -39,7 +39,7 @@ jobs:
           AZURE_VM_USERNAME: ${{ secrets.AZURE_VM_USERNAME }}
         run: |
           ssh $AZURE_VM_USERNAME@$AZURE_VM_IP << EOF
-            # Change to the application directorygit 
+            # Change to the application directory
             cd /home/$AZURE_VM_USERNAME/streamlit_app
 
             # Optionally, create a virtual environment and install dependencies
