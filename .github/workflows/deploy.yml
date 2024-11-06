@@ -3,51 +3,58 @@ name: Deploy Streamlit App to Azure VM
 on:
   push:
     branches:
-      - main  # Adjust the branch name to your deployment branch
+      - main  # Replace 'main' with the branch you want to use for deployment
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Use actions/checkout@v3 instead of v2 to avoid deprecation warnings
+      # Step 1: Check out the code from the GitHub repository
       - name: Check out the code
         uses: actions/checkout@v3
 
-      # Install SSH key and set up known_hosts for GitHub Actions
+      # Step 2: Set up SSH access to the Azure VM
       - name: Set up SSH
         env:
           AZURE_VM_SSH_KEY: ${{ secrets.AZURE_VM_SSH_KEY }}
         run: |
+          # Create the .ssh directory with appropriate permissions
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          
+          # Save the SSH private key from GitHub Secrets and set permissions
           echo "$AZURE_VM_SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          
+          # Add the Azure VM's IP to known_hosts to prevent SSH prompts
           ssh-keyscan -H ${{ secrets.AZURE_VM_IP }} >> ~/.ssh/known_hosts
 
-      # Deploy the code to the Azure VM
+      # Step 3: Deploy the application files to the Azure VM
       - name: Deploy to Azure VM
         env:
           AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
           AZURE_VM_USERNAME: ${{ secrets.AZURE_VM_USERNAME }}
         run: |
-          # Copy the application files to the VM (adjust the path as needed)
+          # Copy application files to the VM's target directory (adjust path if necessary)
           scp -r * $AZURE_VM_USERNAME@$AZURE_VM_IP:/home/$AZURE_VM_USERNAME/streamlit_app/
 
-      # Run the Streamlit app on the Azure VM
+      # Step 4: Run or Restart the Streamlit app on the Azure VM
       - name: Run Streamlit App
         env:
           AZURE_VM_IP: ${{ secrets.AZURE_VM_IP }}
           AZURE_VM_USERNAME: ${{ secrets.AZURE_VM_USERNAME }}
         run: |
           ssh $AZURE_VM_USERNAME@$AZURE_VM_IP << EOF
-            # Change to the application directory
+            # Navigate to the application directory
             cd /home/$AZURE_VM_USERNAME/streamlit_app
 
-            # Optionally, create a virtual environment and install dependencies
+            # (Optional) Set up a virtual environment and install dependencies
             # python3 -m venv venv
             # source venv/bin/activate
             # pip install -r requirements.txt
 
-            # Restart the Streamlit application (use tmux or nohup to keep it running in the background)
+            # Stop any running Streamlit instances and restart the application
             pkill -f streamlit || true
             nohup streamlit run app.py --server.port=8501 &
           EOF
