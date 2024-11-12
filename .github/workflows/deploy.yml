@@ -77,10 +77,10 @@ jobs:
             cd /home/$AZURE_VM_USERNAME/BABot_FAQ
 
             # Remove any existing virtual environment (optional)
-             rm -rf .venv
+             rm -rf mvenv
 
             # Create a new virtual environment
-             python3 -m venv mvenv
+             python3.12 -m venv mvenv
 
             # Activate the virtual environment
             source mvenv/bin/activate
