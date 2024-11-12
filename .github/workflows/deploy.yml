@@ -105,6 +105,11 @@ jobs:
             # Kill any existing Streamlit process (if any)
             pkill -f streamlit || true
 
-            # Start Streamlit app in the background
-            nohup streamlit run BABot_FAQ.py --server.port=8501 &
+            # Kill any existing tmux session named 'streamlit' if it exists
+            tmux kill-session -t streamlit 2>/dev/null || true
+
+            # Create a new tmux session named 'streamlit', start Streamlit in it, and detach
+            tmux new-session -d -s streamlit
+            tmux send-keys -t streamlit "source mvenv/bin/activate" C-m
+            tmux send-keys -t streamlit "streamlit run BABot_FAQ.py --server.port=8501" C-m
           EOF
