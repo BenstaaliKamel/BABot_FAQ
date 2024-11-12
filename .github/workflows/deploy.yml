@@ -77,16 +77,16 @@ jobs:
             cd /home/$AZURE_VM_USERNAME/BABot_FAQ
 
             # Remove any existing virtual environment (optional)
-             rm -rf mvenv
+             #rm -rf mvenv
 
             # Create a new virtual environment
-             python3.12 -m venv mvenv
+             #python3.12 -m venv mvenv
 
             # Activate the virtual environment
             source mvenv/bin/activate
 
             # Upgrade pip
-            pip install --upgrade pip
+            #pip install --upgrade pip
 
             # Install dependencies from requirements.txt
             pip install -r requirements.txt
