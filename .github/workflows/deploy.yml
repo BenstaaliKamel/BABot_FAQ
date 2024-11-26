@@ -1,5 +1,5 @@
 name: Deploy Streamlit App to Azure VM
-
+ #need to see if we can enhance actions without conditions on 'on' section
 on:
   push:
     branches:
