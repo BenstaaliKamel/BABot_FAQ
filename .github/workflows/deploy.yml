@@ -1,9 +1,12 @@
 name: Deploy Streamlit App to Azure VM
  #need to see if we can enhance actions without conditions on 'on' section
+#on:
+#  push:
+#    branches:
+#      - main  # Replace with your deployment branch
+
 on:
-  push:
-    branches:
-      - main  # Replace with your deployment branch
+  workflow_dispatch: # Allows manual triggering from GitHub Actions UI
 
 jobs:
   deploy:
