@@ -4,18 +4,17 @@ from dotenv import load_dotenv, find_dotenv
 from langchain.vectorstores import Pinecone as pcvs
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
-from langchain.chat_models import ChatOpenAI
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import CharacterTextSplitter
 from fpdf import FPDF  # Import FPDF for text-to-PDF conversion
 from pinecone import Pinecone, ServerlessSpec
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAI
 
 # Load environment variables
 load_dotenv(find_dotenv('.env'))
 PINECONE_API_KEY = os.getenv('PINECONE_API_KEY')
 PINECONE_ENV = os.getenv('PINECONE_ENV')
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 # Initialize Pinecone client
 pc = Pinecone(api_key=PINECONE_API_KEY)
@@ -47,9 +46,6 @@ def clear_namespace_if_exists(pinecone_client, index_name, namespace):
 if index_name not in pc.list_indexes().names():
     pc.create_index(index_name, dimension=1536, metric='cosine', spec=spec)
 
-# Clear the namespace if it exists
-# clear_namespace_if_exists(pc, index_name, namespace)
-
 # Streamlit page configuration
 st.set_page_config(page_title="BABot_FAQ", page_icon=":white_check_mark:", layout="wide")
 
@@ -58,13 +54,16 @@ CONVERSATION_FILE_PATH = "conversation_history.txt"
 
 def reset_conversation_history():
     """Reinitialize conversation file to a new empty file."""
-    # Create and initialize an empty new file
     with open(CONVERSATION_FILE_PATH, "w") as file:
         file.write("")  # Empty content
     st.success(f"L'historique des interrogations re initialisé")
 
 # Initialize models
-llm = ChatOpenAI(model_name='gpt-4o-2024-05-13', temperature=0.5, max_tokens=4080)
+# Replace OpenAI LLM with Gemini LLM
+llm = GoogleGenerativeAI(
+model="models/gemini-1.5-flash-8b",
+google_api_key=GEMINI_API_KEY,
+)
 embeddings = OpenAIEmbeddings(model='text-embedding-3-small', dimensions=1536)
 doc_db = pcvs.from_documents('', embeddings, index_name=index_name, namespace=namespace)
 
@@ -228,4 +227,3 @@ def main():
 # Run the Streamlit app
 if __name__ == "__main__":
     main()
-
